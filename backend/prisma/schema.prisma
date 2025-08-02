@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TreatmentTimes {
+  id           String @id @default(cuid())
+  disease_code String @unique
+  base_mins    Int 
+  patient_cases PatientCase[]
+}
+
+model PatientCase {
+  id String @id @default(cuid()) @unique
+  zone Zone  
+  si Int 
+  news2 Int
+  severity Float
+  resource_score Float
+  arrival_time DateTime
+  last_eval_time DateTime
+  time_served DateTime?
+  treatment_time Float
+  remaining_time Float
+  priority Float
+
+  age_flag Boolean @default(false) // if age > 65 or age < 10
+  assigned_bed Beds? @relation("BedToPatientCase")
+  disease_code String?
+  treatment_times TreatmentTimes? @relation(fields: [disease_code], references: [disease_code])
+
+  patient_id String? @unique
+
+  @@index([zone])
+}
+
+model Beds {
+  id String @id @default(cuid()) 
+  zone Zone 
+  case_id String? @unique  
+  patient_case PatientCase? @relation("BedToPatientCase", fields: [case_id], references: [id])
+}
+
+model WeightConfigs{
+  zone Zone @id
+  a Float
+  b Float
+  c Float
+  d Float
+  e Float
+  wait_cap Float 
+}
+
+model Logs{
+  id String @id @default(cuid())
+  action Action
+  who String
+  case_id String
+  old_value Json?
+  new_value Json?
+  timestamp DateTime @default(now())
+  @@index([timestamp])
+
+}
+
+enum Action {
+  ASSIGN_BED
+  RELEASE_BED
+  EXTEND_BED
+  OVERRIDE_PRIORITY
+}
+
+enum Zone {  
+  RED
+  ORANGE
+  YELLOW 
+  GREEN
+  BLUE
+}
