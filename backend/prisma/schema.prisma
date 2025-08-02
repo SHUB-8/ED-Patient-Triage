@@ -14,6 +14,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id String @id @default(cuid())
+  type UserType
+  name String
+  email String @unique
+  password String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
 model TreatmentTimes {
   id           String @id @default(cuid())
   disease_code String @unique
@@ -47,6 +57,7 @@ model PatientCase {
 
 model Beds {
   id String @id @default(cuid()) 
+  bed_number String @unique
   zone Zone 
   case_id String? @unique  
   patient_case PatientCase? @relation("BedToPatientCase", fields: [case_id], references: [id])
@@ -70,8 +81,15 @@ model Logs{
   old_value Json?
   new_value Json?
   timestamp DateTime @default(now())
+  
   @@index([timestamp])
+}
 
+enum UserType {
+  ADMIN
+  DOCTOR
+  NURSE
+  RECEPTIONIST
 }
 
 enum Action {
