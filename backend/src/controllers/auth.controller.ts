@@ -1,23 +1,24 @@
 import bcrypt from "bcryptjs";
-import prisma from "../lib/prisma";
+import prisma from "../lib/prisma.js";
 import { Request, Response } from "express";
-import generateJWT from "../utils/generateJWT";
+import generateJWT from "../utils/generateJWT.js";
+import { UserType } from "@prisma/client";
 
-type UserType = {
+type UserWithPassword = {
   id: string;
   name: string;
   email: string;
   password: string;
   hospital: string;
-  type: UserRoleType;
+  type: UserType;
 };
 
-type PublicUserType = {
+type PublicUser = {
   id: string;
   name: string;
   email: string;
   hospital: string;
-  type: UserRoleType;
+  type: UserType;
 };
 
 type SignupProps = {
@@ -25,30 +26,42 @@ type SignupProps = {
   email: string;
   password: string;
   hospital: string;
-  type: UserRoleType;
+  type: UserType;
 };
 
-enum UserRoleType {
-  DOCTOR = "DOCTOR",
-  NURSE = "NURSE",
-  ADMIN = "ADMIN",
-  RECEPTIONIST = "RECEPTIONIST",
-}
+type LoginProps = {
+  email: string;
+  password: string;
+};
 
 const signup = async (req: Request, res: Response) => {
-  const { name, email, password, hospital, type }: SignupProps = req.body;
   try {
-    if (!name || !email || !password || !hospital) {
+    console.log("Signup request received:", req.body);
+    const { name, email, password, hospital, type }: SignupProps = req.body;
+    if (!name || !email || !password || !hospital || !type) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    if (!Object.values(UserRoleType).includes(type)) {
+    if (!Object.values(UserType).includes(type)) {
       return res.status(400).json({ message: "Invalid user type provided" });
+    }
+
+    // Add email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // Add password validation
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser: PublicUserType = await prisma.user.create({
+    const newUser: PublicUser = await prisma.user.create({
       data: {
         name,
         email: email.toLowerCase(),
@@ -70,7 +83,7 @@ const signup = async (req: Request, res: Response) => {
       user: newUser,
     });
   } catch (error: any) {
-    if (error.code === "P2002" && error.meta.target.includes("email")) {
+    if (error.code === "P2002" && error.meta?.target?.includes("email")) {
       return res.status(400).json({ message: "Email already exists" });
     }
 
@@ -79,32 +92,27 @@ const signup = async (req: Request, res: Response) => {
   }
 };
 
-type LoginProps = {
-  email: string;
-  password: string;
-};
-
 const login = async (req: Request, res: Response) => {
-  const { email, password }: LoginProps = req.body;
   try {
+    const { email, password }: LoginProps = req.body;
     if (!email || !password) {
       return res
         .status(400)
         .json({ message: "Email and password are required" });
     }
 
-    const user: UserType | null = await prisma.user.findUnique({
+    const user: UserWithPassword | null = await prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid password" });
+      return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const token = generateJWT(user.id, res);
@@ -127,28 +135,18 @@ const login = async (req: Request, res: Response) => {
 };
 
 const profile = async (req: Request, res: Response) => {
+  console.log(req.user);
   const userId = req.user?.id;
   try {
     if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const user: PublicUserType | null = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        hospital: true,
-        type: true,
-      },
-    });
-
-    if (!user) {
+    if (!req.user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.status(200).json(user);
+    res.status(200).json(req.user);
   } catch (error: any) {
     console.error("Error fetching profile:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -156,18 +154,18 @@ const profile = async (req: Request, res: Response) => {
 };
 
 const logout = (_req: Request, res: Response) => {
-    try{
-        res.cookie("token", "", {
-            maxAge: 0,
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-        });
-        res.status(200).json({ message: "Logout successful" });
-    } catch (error: any) {
-        console.error("Error during logout:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-}
+  try {
+    res.cookie("token", "", {
+      maxAge: 0,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error: any) {
+    console.error("Error during logout:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export { signup, login, profile, logout };

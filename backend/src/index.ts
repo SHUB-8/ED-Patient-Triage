@@ -1,14 +1,23 @@
 import express from "express";
-import prisma from "./lib/prisma";
+import prisma from "./lib/prisma.js";
 import dotenv from "dotenv";
+import authRoutes from "./routes/authRoutes.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET is not defined.");
+  process.exit(1);
+}
 
-app.use("/api");
+app.use(express.json());
+app.use(cookieParser());
+app.use("/api/", authRoutes);
+
+const PORT = process.env.PORT || 3000;
 
 const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
