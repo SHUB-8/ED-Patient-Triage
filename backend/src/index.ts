@@ -3,6 +3,9 @@ import prisma from "./lib/prisma.js";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
 import cookieParser from "cookie-parser";
+import patientRoutes from "./routes/patientRoutes.js";
+import priorityRoutes from "./routes/priorityRoutes.js";
+import { initializePriorityQueueFromDB } from "./controllers/priority.controller.js";
 
 dotenv.config();
 
@@ -16,10 +19,13 @@ if (!process.env.JWT_SECRET) {
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/", authRoutes);
+app.use("/api/patients", patientRoutes);
+app.use("/api/queues", priorityRoutes);
 
 const PORT = process.env.PORT || 3000;
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
+  await initializePriorityQueueFromDB();
   console.log(`Server is running on port ${PORT}`);
 });
 

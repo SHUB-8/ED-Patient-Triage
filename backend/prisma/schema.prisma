@@ -24,35 +24,51 @@ model User {
   updated_at DateTime @updatedAt
 }
 
-model TreatmentTimes {
-  id           String @id @default(cuid())
-  disease_code String @unique
-  base_mins    Int 
-  patient_cases PatientCase[]
+// model TreatmentTimes {
+//   id           String @id @default(cuid())
+//   disease_code String @unique
+//   base_mins    Int 
+// }
+
+model Patient{
+  id String @id @default(cuid())
+  name String
+  age Int
+  gender Gender
+  phone String @unique
+  email String @unique
+  medical_history Json?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  cases PatientCase[] @relation("PatientToCases")
 }
 
 model PatientCase {
-  id String @id @default(cuid()) @unique
+  id String @id @default(cuid())
   zone Zone  
-  si Int 
+  si Int //from disease
   news2 Int
-  severity Float
   resource_score Float
+  age_flag Boolean @default(false) // if age > 65 or age < 10
   arrival_time DateTime
   last_eval_time DateTime
   time_served DateTime?
-  treatment_time Float
-  remaining_time Float
   priority Float
-
-  age_flag Boolean @default(false) // if age > 65 or age < 10
-  assigned_bed Beds? @relation("BedToPatientCase")
   disease_code String?
-  treatment_times TreatmentTimes? @relation(fields: [disease_code], references: [disease_code])
+  
+  assigned_bed Beds? @relation("BedToPatientCase")
 
   patient_id String? @unique
+  patient Patient? @relation("PatientToCases", fields: [patient_id], references: [id])
 
-  @@index([zone])
+  @@index([time_served])
+}
+
+model Disease{
+  code String @id
+  name String
+  description String?
+  treatment_time Int // in minutes
 }
 
 model Beds {
@@ -105,4 +121,10 @@ enum Zone {
   YELLOW 
   GREEN
   BLUE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
 }
