@@ -193,3 +193,55 @@ export const getPriorityQueue = (req: Request, res: Response) => {
   }
   return res.status(200).json(queue);
 };
+
+export const admitTopPriorityCase = async (req: Request, res: Response) => {
+  const zone = req.params.zone as Zone;
+  if (!zone) {
+    return res.status(400).json({ error: "Zone is required" });
+  }
+  if (!queues[zone] || queues[zone].length === 0) {
+    return res.status(404).json({ error: "No cases in this zone" });
+  }
+
+  const removedCase: PatientCase | undefined = queues[zone].shift();
+
+  if (removedCase) {
+    await prisma.patientCase.update({
+      where: { id: removedCase.id },
+      data: { time_served: new Date() },
+    });
+
+    return res.status(200).json({
+      message: "Top priority case admitted successfully",
+      case: removedCase,
+    });
+  }
+  return res.status(500).json({ error: "Failed to admit top priority case" });
+};
+
+export const updateDetails = async (req: Request, res: Response) => {
+  const {id, NEWS2, SI, resourceScore } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ error: "ID is required" });
+  }
+
+  try {
+    const patientCase = await prisma.patientCase.update({
+      where: { id },
+      data: {
+        news2: NEWS2,
+        si: SI,
+        resource_score: resourceScore,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Patient case updated successfully",
+      case: patientCase,
+    });
+  } catch (error) {
+    console.error("Error updating patient case:", error);
+    return res.status(500).json({ error: "Failed to update patient case" });
+  }
+}
