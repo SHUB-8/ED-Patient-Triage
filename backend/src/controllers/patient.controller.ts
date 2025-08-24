@@ -1,16 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../lib/prisma.js";
-import { Gender } from "@prisma/client";
-
-type Patient = {
-  id: string;
-  name: string;
-  age: number;
-  gender: Gender;
-  phone: string;
-  email: string;
-  medical_history: any;
-};
+import { Patient } from "../types/patient.types.js";
 
 export const addPatient = async (req: Request, res: Response) => {
   try {

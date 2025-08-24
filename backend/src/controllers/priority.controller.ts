@@ -2,15 +2,6 @@ import { PatientCase, Zone } from "@prisma/client";
 import { Request, Response } from "express";
 import prisma from "../lib/prisma.js";
 
-// type Patient = {
-//   id: string;
-//   name: string;
-//   age: number;
-//   gender: Gender;
-//   phone: string;
-//   email: string;
-//   medical_history: any;
-// };
 
 type PQParams = {
   id: string;
