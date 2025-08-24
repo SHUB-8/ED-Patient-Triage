@@ -113,6 +113,10 @@ export const insertToPriorityQueue = async (req: Request, res: Response) => {
         a.arrival_time.getTime() - b.arrival_time.getTime()
     );
 
+    if (req.io) {
+      req.io.emit("queues_updated", queues);
+    }
+
     return res.status(201).json({
       message: "Patient case inserted successfully",
       case: patientCase,
@@ -211,6 +215,10 @@ export const admitTopPriorityCase = async (req: Request, res: Response) => {
       data: { time_served: new Date() },
     });
 
+    if (req.io) {
+      req.io.emit("queues_updated", queues);
+    }
+
     return res.status(200).json({
       message: "Top priority case admitted successfully",
       case: removedCase,
@@ -220,13 +228,27 @@ export const admitTopPriorityCase = async (req: Request, res: Response) => {
 };
 
 export const updateDetails = async (req: Request, res: Response) => {
-  const {id, NEWS2, SI, resourceScore } = req.body;
+  const { id, NEWS2, SI, resourceScore } = req.body;
 
   if (!id) {
     return res.status(400).json({ error: "ID is required" });
   }
 
   try {
+    const existingCase = await prisma.patientCase.findUnique({
+      where: { id },
+    });
+
+    if (!existingCase) {
+      return res.status(404).json({ error: "Patient case not found" });
+    }
+
+    if (existingCase.time_served) {
+      return res
+        .status(400)
+        .json({ error: "Cannot update a case that has already been served" });
+    }
+
     const patientCase = await prisma.patientCase.update({
       where: { id },
       data: {
@@ -236,6 +258,12 @@ export const updateDetails = async (req: Request, res: Response) => {
       },
     });
 
+    recomputeAllPriorities();
+
+    if (req.io) {
+      req.io.emit("queues_updated", queues);
+    }
+
     return res.status(200).json({
       message: "Patient case updated successfully",
       case: patientCase,
@@ -244,4 +272,4 @@ export const updateDetails = async (req: Request, res: Response) => {
     console.error("Error updating patient case:", error);
     return res.status(500).json({ error: "Failed to update patient case" });
   }
-}
+};

@@ -112,23 +112,23 @@ export const updatePatient = async (req: Request, res: Response) => {
   }
 };
 
-export const deletePatient = async (req: Request, res: Response) => {
-  const { id } = req.params;
+// export const deletePatient = async (req: Request, res: Response) => {
+//   const { id } = req.params;
 
-  try {
-    if (!id) {
-      return res.status(400).json({ message: "Patient ID is required" });
-    }
-    const deletedPatient: Patient | null = await prisma.patient.delete({
-      where: { id },
-    });
+//   try {
+//     if (!id) {
+//       return res.status(400).json({ message: "Patient ID is required" });
+//     }
+//     const deletedPatient: Patient | null = await prisma.patient.delete({
+//       where: { id },
+//     });
 
-    return res.status(200).json({
-      message: "Patient deleted successfully",
-      patient: deletedPatient,
-    });
-  } catch (error) {
-    console.error("Error deleting patient:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
+//     return res.status(200).json({
+//       message: "Patient deleted successfully",
+//       patient: deletedPatient,
+//     });
+//   } catch (error) {
+//     console.error("Error deleting patient:", error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
