@@ -11,6 +11,7 @@ import {
 } from "./controllers/priority.controller.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import bedRoutes from "./routes/bedRoutes.js";
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ app.use((req, _res, next) => {
 app.use("/api/", authRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/queues", priorityRoutes);
+app.use("/api/beds", bedRoutes);
 
 io.on("connection", (socket) => {
   console.log(`User connected with socket ID: ${socket.id}`);
