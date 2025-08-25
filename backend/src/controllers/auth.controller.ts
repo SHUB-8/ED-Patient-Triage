@@ -95,6 +95,8 @@ const signup = async (req: Request, res: Response) => {
 const login = async (req: Request, res: Response) => {
   try {
     const { email, password }: LoginProps = req.body;
+    console.log("login request");
+    console.log(email, password);
     if (!email || !password) {
       return res
         .status(400)
@@ -110,6 +112,8 @@ const login = async (req: Request, res: Response) => {
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    console.log("isPasswordvalid", isPasswordValid);
 
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid credentials" });

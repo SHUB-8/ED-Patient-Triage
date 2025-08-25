@@ -107,3 +107,28 @@ export const dischargeFromBed = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const createBed = async (req: Request, res: Response) => {
+  try {
+    const { zone, bed_number } = req.body;
+
+    if (!zone || !bed_number) {
+      return res.status(400).json({ message: "Zone and bed number are required" });
+    }
+
+    const newBed = await prisma.beds.create({
+      data: {
+        zone,
+        bed_number,
+      },
+    });
+
+    return res.status(201).json({
+      message: "Bed created successfully",
+      bed: newBed,
+    });
+  } catch (error) {
+    console.error("Error creating bed:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
