@@ -58,9 +58,10 @@ model PatientCase {
   
   assigned_bed Beds? @relation("BedToPatientCase")
 
-  patient_id String? @unique
+  patient_id String? 
   patient Patient? @relation("PatientToCases", fields: [patient_id], references: [id])
 
+  @@index([patient_id])
   @@index([time_served])
 }
 

@@ -64,6 +64,11 @@ export const addToBed = async (req: Request, res: Response) => {
         .json({ message: "Both case ID and bed ID are required" });
     }
 
+    const bed = await prisma.beds.findUnique({ where: { id: bed_id } });
+    if (bed?.case_id) {
+      return res.status(400).json({ message: "Bed already occupied" });
+    }
+
     const updatedBed = await prisma.beds.update({
       where: { id: bed_id },
       data: { case_id: case_id },
@@ -113,7 +118,9 @@ export const createBed = async (req: Request, res: Response) => {
     const { zone, bed_number } = req.body;
 
     if (!zone || !bed_number) {
-      return res.status(400).json({ message: "Zone and bed number are required" });
+      return res
+        .status(400)
+        .json({ message: "Zone and bed number are required" });
     }
 
     const newBed = await prisma.beds.create({

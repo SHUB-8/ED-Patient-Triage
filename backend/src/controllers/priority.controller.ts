@@ -2,7 +2,6 @@ import { PatientCase, Zone } from "@prisma/client";
 import { Request, Response } from "express";
 import prisma from "../lib/prisma.js";
 
-
 type PQParams = {
   id: string;
   NEWS2: number;
@@ -82,6 +81,11 @@ export const insertToPriorityQueue = async (req: Request, res: Response) => {
       arrival,
       weightConfig
     );
+
+    const patient = await prisma.patient.findUnique({ where: { id } });
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
 
     const patientCase = await prisma.patientCase.create({
       data: {

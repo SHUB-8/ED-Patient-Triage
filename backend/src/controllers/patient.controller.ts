@@ -102,6 +102,53 @@ export const updatePatient = async (req: Request, res: Response) => {
   }
 };
 
+export const getPatientCases = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    if (!id) {
+      return res.status(400).json({ message: "Patient ID is required" });
+    }
+
+    const patientCases = await prisma.patientCase.findMany({
+      where: { patient_id: id },
+    });
+
+    return res.status(200).json({
+      message: "Patient cases fetched successfully",
+      cases: patientCases,
+    });
+  } catch (error) {
+    console.error("Error fetching patient cases:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const searchPatients = async (req: Request, res: Response) => {
+  try {
+    const { q, limit = 10 } = req.query;
+    const patients = await prisma.patient.findMany({
+      where: {
+        OR: [
+          { name: { contains: q as string, mode: "insensitive" } },
+          { email: { contains: q as string, mode: "insensitive" } },
+          { phone: { contains: q as string, mode: "insensitive" } },
+        ],
+      },
+      take: parseInt(limit as string),
+      orderBy: { created_at: "desc" },
+    });
+
+    return res.status(200).json({
+      message: "Patients fetched successfully",
+      patients,
+    });
+  } catch (error) {
+    console.error("Error searching patients:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // export const deletePatient = async (req: Request, res: Response) => {
 //   const { id } = req.params;
 
