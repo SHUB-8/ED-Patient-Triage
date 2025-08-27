@@ -12,6 +12,7 @@ import {
 import { createServer } from "http";
 import { Server } from "socket.io";
 import bedRoutes from "./routes/bedRoutes.js";
+import diseaseRoutes from "./routes/diseaseRoutes.js";
 
 dotenv.config();
 
@@ -28,8 +29,9 @@ app.use(cookieParser());
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "*",
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -42,6 +44,7 @@ app.use("/api/", authRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/queues", priorityRoutes);
 app.use("/api/beds", bedRoutes);
+app.use("/api/diseases", diseaseRoutes);
 
 io.on("connection", (socket) => {
   console.log(`User connected with socket ID: ${socket.id}`);

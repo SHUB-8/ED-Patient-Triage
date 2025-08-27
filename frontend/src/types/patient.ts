@@ -21,7 +21,6 @@ export interface PatientsData {
   orange: ZoneData;
   yellow: ZoneData;
   green: ZoneData;
-  blue: ZoneData;
 }
 
 export interface PatientVitals {

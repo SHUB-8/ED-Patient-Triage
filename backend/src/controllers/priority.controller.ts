@@ -23,15 +23,13 @@ const queues: Record<Zone, PatientCase[]> = {
   ORANGE: [],
   YELLOW: [],
   GREEN: [],
-  BLUE: [],
 };
 
 const assignSection = (NEWS2: number, SI: number): Zone => {
   if (SI === 4 || NEWS2 >= 13) return "RED";
   if (SI === 3 || NEWS2 >= 7) return "ORANGE";
   if (SI === 2 || NEWS2 >= 4) return "YELLOW";
-  if (SI === 1 || NEWS2 >= 1) return "GREEN";
-  return "BLUE";
+  else return "GREEN";
 };
 
 const Zones: Record<Zone, SectionCfg> = {
@@ -39,7 +37,6 @@ const Zones: Record<Zone, SectionCfg> = {
   ORANGE: { wNEWS2: 0.35, wSI: 0.25, wT: 0.05, wR: 0.25, wA: 0.1 },
   YELLOW: { wNEWS2: 0.25, wSI: 0.2, wT: 0.15, wR: 0.3, wA: 0.1 },
   GREEN: { wNEWS2: 0.1, wSI: 0.1, wT: 0.3, wR: 0.2, wA: 0.3 },
-  BLUE: { wNEWS2: 0.05, wSI: 0.05, wT: 0.4, wR: 0.1, wA: 0.4 },
 };
 
 const getPriority = (
@@ -98,6 +95,7 @@ export const insertToPriorityQueue = async (req: Request, res: Response) => {
         last_eval_time: arrival,
         priority,
         patient_id: id,
+        status: "WAITING", // Set initial status
       },
     });
 
@@ -186,10 +184,11 @@ export const getPriorityQueue = (req: Request, res: Response) => {
   if (!zone) {
     return res.status(400).json({ error: "Zone is required" });
   }
-  const queue = queues[zone];
-  if (!queue) {
-    return res.status(404).json({ error: "Zone not found" });
+
+  if (!zone || !Object.keys(queues).includes(zone)) {
+    return res.status(400).json({ error: "Invalid zone parameter" });
   }
+  const queue = queues[zone];
   return res.status(200).json(queue);
 };
 
@@ -207,7 +206,10 @@ export const admitTopPriorityCase = async (req: Request, res: Response) => {
   if (removedCase) {
     await prisma.patientCase.update({
       where: { id: removedCase.id },
-      data: { time_served: new Date() },
+      data: {
+        time_served: new Date(),
+        status: "IN_TREATMENT",
+      },
     });
 
     if (req.io) {

@@ -18,8 +18,10 @@ export const getBeds = async (_req: Request, res: Response) => {
 export const getBedByZone = async (req: Request, res: Response) => {
   try {
     const { zone } = req.params as { zone: Zone };
-    if (!zone) {
-      return res.status(400).json({ message: "Zone parameter is required" });
+    if (!zone || !Object.values(Zone).includes(zone)) {
+      return res.status(400).json({
+        message: "Valid zone is required (RED, ORANGE, YELLOW, GREEN)",
+      });
     }
 
     const beds = await prisma.beds.findMany({ where: { zone: zone } });
@@ -58,14 +60,32 @@ export const getBedById = async (req: Request, res: Response) => {
 export const addToBed = async (req: Request, res: Response) => {
   try {
     const { case_id, bed_id } = req.body as { case_id: string; bed_id: string };
+
     if (!case_id || !bed_id) {
       return res
         .status(400)
         .json({ message: "Both case ID and bed ID are required" });
     }
 
+    const patientCase = await prisma.patientCase.findUnique({
+      where: { id: case_id },
+    });
+
+    if (!patientCase) {
+      return res.status(404).json({ message: "Patient case not found" });
+    }
+
+    if (patientCase.time_served) {
+      return res.status(400).json({ message: "Patient case already served" });
+    }
+
     const bed = await prisma.beds.findUnique({ where: { id: bed_id } });
-    if (bed?.case_id) {
+
+    if (!bed) {
+      return res.status(404).json({ message: "Bed not found" });
+    }
+
+    if (bed.case_id) {
       return res.status(400).json({ message: "Bed already occupied" });
     }
 

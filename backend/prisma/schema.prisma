@@ -22,13 +22,9 @@ model User {
   hospital String
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-}
 
-// model TreatmentTimes {
-//   id           String @id @default(cuid())
-//   disease_code String @unique
-//   base_mins    Int 
-// }
+  assigned_cases PatientCase[] @relation("StaffToPatientCase")
+}
 
 model Patient{
   id String @id @default(cuid())
@@ -49,12 +45,17 @@ model PatientCase {
   si Int //from disease
   news2 Int
   resource_score Float
-  age_flag Boolean @default(false) // if age > 65 or age < 10
+  age_flag Boolean @default(false) // if age > 65 or age < 15
   arrival_time DateTime
   last_eval_time DateTime
   time_served DateTime?
   priority Float
   disease_code String?
+  status CaseStatus @default(WAITING)
+
+  staff_id String? @unique
+  staff User? @relation("StaffToPatientCase", fields: [staff_id], references: [id])
+
   
   assigned_bed Beds? @relation("BedToPatientCase")
 
@@ -66,10 +67,12 @@ model PatientCase {
 }
 
 model Disease{
-  code String @id
+  id String @id @default(cuid())
   name String
   description String?
   treatment_time Int // in minutes
+  max_wait_time Int
+  severity Int 
 }
 
 model Beds {
@@ -102,10 +105,16 @@ model Logs{
   @@index([timestamp])
 }
 
+enum CaseStatus {
+  WAITING
+  IN_TREATMENT
+  DISCHARGED
+  TRANSFERRED
+}
+
 enum UserType {
   ADMIN
-  DOCTOR
-  NURSE
+  NURSE 
   RECEPTIONIST
 }
 
@@ -121,7 +130,6 @@ enum Zone {
   ORANGE
   YELLOW 
   GREEN
-  BLUE
 }
 
 enum Gender {
