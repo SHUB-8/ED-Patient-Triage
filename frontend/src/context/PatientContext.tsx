@@ -4,7 +4,7 @@ import React, {
   useContext,
   useState,
   useEffect,
-  ReactNode,
+  type ReactNode,
 } from "react";
 import { fetchAllQueues } from "../services/priorityService";
 import type { PatientCase } from "../types/priority";

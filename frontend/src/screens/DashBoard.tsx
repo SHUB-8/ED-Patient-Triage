@@ -5,7 +5,11 @@ import { formatTime } from "../utils/timeUtils";
 import { fetchAllQueues } from "../services/priorityService";
 import { fetchAllBeds } from "../services/bedService";
 import { admitTopPatientFromZone } from "../services/admissionService";
-import { initSocket, onQueueUpdate, offQueueUpdate } from "../services/socketService";
+import {
+  initSocket,
+  onQueueUpdate,
+  offQueueUpdate,
+} from "../services/socketService";
 import type { PatientCase } from "../types/priority";
 import type { Bed } from "../types/bed";
 
@@ -133,15 +137,20 @@ const Dashboard = () => {
   /**
    * Handle real-time queue updates from socket
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleQueueUpdate = (data: any) => {
     console.log("Received queue update from socket:", data);
-    
+
     // Transform the raw API data into the structure needed by the component
     const transformedData = Object.keys(data).reduce((acc, zone) => {
       const patients = data[zone as keyof typeof data];
       acc[zone as keyof PatientsData] = {
-        waitingQueue: patients.filter((p: PatientCase) => p.status === "WAITING"),
-        treatmentQueue: patients.filter((p: PatientCase) => p.status === "IN_TREATMENT"),
+        waitingQueue: patients.filter(
+          (p: PatientCase) => p.status === "WAITING"
+        ),
+        treatmentQueue: patients.filter(
+          (p: PatientCase) => p.status === "IN_TREATMENT"
+        ),
       };
       return acc;
     }, {} as PatientsData);
@@ -162,31 +171,29 @@ const Dashboard = () => {
    */
   const handleAdmitTopPatient = async (zone: string) => {
     // Find the first available bed in the same zone
-    const availableBed = beds.find(
-      bed => bed.zone === zone && !bed.case_id
-    );
-    
+    const availableBed = beds.find((bed) => bed.zone === zone && !bed.case_id);
+
     if (!availableBed) {
       setError(`No available beds in ${zone} zone`);
       return;
     }
-    
-    setAdmitting(prev => ({ ...prev, [zone]: true }));
+
+    setAdmitting((prev) => ({ ...prev, [zone]: true }));
     setError(null);
-    
+
     try {
       await admitTopPatientFromZone(
-        zone as 'RED' | 'ORANGE' | 'YELLOW' | 'GREEN',
+        zone as "RED" | "ORANGE" | "YELLOW" | "GREEN",
         availableBed.id
       );
-      
+
       // Refresh data after admission
       await Promise.all([fetchQueueData(), fetchBedData()]);
     } catch (error) {
       console.error(`Error admitting patient from ${zone} zone:`, error);
       setError(`Failed to admit patient from ${zone} zone`);
     } finally {
-      setAdmitting(prev => ({ ...prev, [zone]: false }));
+      setAdmitting((prev) => ({ ...prev, [zone]: false }));
     }
   };
 
@@ -202,13 +209,13 @@ const Dashboard = () => {
 
     // Initialize socket connection
     initSocket();
-    
+
     // Set up socket listener for queue updates
     onQueueUpdate(handleQueueUpdate);
-    
+
     // Fetch initial data
     refreshData();
-    
+
     // Set up auto-refresh as fallback
     const refreshInterval = setInterval(() => {
       fetchQueueData();

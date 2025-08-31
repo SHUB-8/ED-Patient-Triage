@@ -8,7 +8,7 @@ export interface PatientData {
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   phone: string;
   email: string;
-  medical_history?: any;
+  medical_history?: unknown;
   created_at: string;
   updated_at: string;
 }
