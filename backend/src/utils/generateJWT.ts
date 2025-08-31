@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 
 import { Response } from "express";
 
-const generateJWT = (userId: string, res: Response): void => {
+const generateJWT = (userId: string, res: Response): string => {
   const secret: string = process.env.JWT_SECRET!;
   const token = jwt.sign({ userId }, secret, {
     expiresIn: "15d",
@@ -14,6 +14,8 @@ const generateJWT = (userId: string, res: Response): void => {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
   });
+
+  return token;
 };
 
 export default generateJWT;

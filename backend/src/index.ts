@@ -13,6 +13,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import bedRoutes from "./routes/bedRoutes.js";
 import diseaseRoutes from "./routes/diseaseRoutes.js";
+import cors from "cors";
 
 dotenv.config();
 
@@ -22,6 +23,15 @@ if (!process.env.JWT_SECRET) {
   console.error("FATAL ERROR: JWT_SECRET is not defined.");
   process.exit(1);
 }
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());

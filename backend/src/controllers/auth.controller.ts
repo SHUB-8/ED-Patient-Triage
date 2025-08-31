@@ -78,10 +78,15 @@ const signup = async (req: Request, res: Response) => {
       },
     });
 
+    const token = generateJWT(newUser.id, res);
+    console.log("New user created:", token);
+
     res.status(201).json({
       message: "User created successfully",
       user: newUser,
+      token: token,
     });
+
   } catch (error: any) {
     if (error.code === "P2002" && error.meta?.target?.includes("email")) {
       return res.status(400).json({ message: "Email already exists" });

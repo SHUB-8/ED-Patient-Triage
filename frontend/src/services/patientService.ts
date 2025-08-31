@@ -1,14 +1,13 @@
-import { PatientsData, PatientVitals } from '../types/patient';
+import { PatientsData, PatientVitals } from "../types/patient";
 
 // Mock data generation for demonstration
 const generateMockPatientsData = (): PatientsData => {
-  const zones = ['red', 'orange', 'yellow', 'green', 'blue'] as const;
+  const zones = ["red", "orange", "yellow", "green"] as const;
   const data: PatientsData = {
     red: { waitingQueue: [], treatmentQueue: [], totalBeds: 6 },
     orange: { waitingQueue: [], treatmentQueue: [], totalBeds: 8 },
     yellow: { waitingQueue: [], treatmentQueue: [], totalBeds: 10 },
     green: { waitingQueue: [], treatmentQueue: [], totalBeds: 12 },
-    blue: { waitingQueue: [], treatmentQueue: [], totalBeds: 8 }
   };
 
   zones.forEach((zone, zoneIndex) => {
@@ -16,9 +15,11 @@ const generateMockPatientsData = (): PatientsData => {
     const waitingCount = Math.floor(Math.random() * 8) + 1;
     for (let i = 0; i < waitingCount; i++) {
       data[zone].waitingQueue.push({
-        patientId: `P${String(zoneIndex * 100 + i + 1).padStart(4, '0')}`,
+        patientId: `P${String(zoneIndex * 100 + i + 1).padStart(4, "0")}`,
         priorityScore: Math.floor(Math.random() * 40) + (100 - zoneIndex * 20),
-        arrivalTime: new Date(Date.now() - Math.random() * 120 * 60 * 1000).toISOString()
+        arrivalTime: new Date(
+          Date.now() - Math.random() * 120 * 60 * 1000
+        ).toISOString(),
       });
     }
 
@@ -32,9 +33,12 @@ const generateMockPatientsData = (): PatientsData => {
     );
     for (let i = 0; i < treatmentCount; i++) {
       data[zone].treatmentQueue.push({
-        patientId: `P${String(zoneIndex * 100 + waitingCount + i + 1).padStart(4, '0')}`,
-        bedNumber: `${zone.toUpperCase()}-${String(i + 1).padStart(2, '0')}`,
-        remainingTime: Math.floor(Math.random() * 180) + 15
+        patientId: `P${String(zoneIndex * 100 + waitingCount + i + 1).padStart(
+          4,
+          "0"
+        )}`,
+        bedNumber: `${zone.toUpperCase()}-${String(i + 1).padStart(2, "0")}`,
+        remainingTime: Math.floor(Math.random() * 180) + 15,
       });
     }
 
@@ -47,16 +51,22 @@ const generateMockPatientsData = (): PatientsData => {
 
 export const fetchAllPatientsData = async (): Promise<PatientsData> => {
   // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
-  
+  await new Promise((resolve) =>
+    setTimeout(resolve, 500 + Math.random() * 1000)
+  );
+
   // In a real application, this would make an API call to PostgreSQL
   return generateMockPatientsData();
 };
 
-export const fetchPatientVitals = async (patientId: string): Promise<PatientVitals> => {
+export const fetchPatientVitals = async (
+  patientId: string
+): Promise<PatientVitals> => {
   // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
-  
+  await new Promise((resolve) =>
+    setTimeout(resolve, 200 + Math.random() * 300)
+  );
+
   // Generate mock vitals data
   const baseVitals = {
     heartRate: 70 + Math.floor(Math.random() * 50),
@@ -66,17 +76,23 @@ export const fetchPatientVitals = async (patientId: string): Promise<PatientVita
     respiratoryRate: 16 + Math.floor(Math.random() * 8),
     oxygenSaturation: 95 + Math.floor(Math.random() * 5),
     news2Score: Math.floor(Math.random() * 12),
-    lastUpdated: new Date(Date.now() - Math.random() * 30 * 60 * 1000).toISOString()
+    lastUpdated: new Date(
+      Date.now() - Math.random() * 30 * 60 * 1000
+    ).toISOString(),
   };
 
   // Add some realistic variations based on patient priority
-  const priorityVariation = patientId.includes('P00') ? 1.2 : 1;
-  
+  const priorityVariation = patientId.includes("P00") ? 1.2 : 1;
+
   return {
     ...baseVitals,
     heartRate: Math.round(baseVitals.heartRate * priorityVariation),
     systolicBP: Math.round(baseVitals.systolicBP * priorityVariation),
-    temperature: Math.round((baseVitals.temperature * priorityVariation) * 10) / 10,
-    news2Score: Math.min(Math.round(baseVitals.news2Score * priorityVariation), 20)
+    temperature:
+      Math.round(baseVitals.temperature * priorityVariation * 10) / 10,
+    news2Score: Math.min(
+      Math.round(baseVitals.news2Score * priorityVariation),
+      20
+    ),
   };
 };

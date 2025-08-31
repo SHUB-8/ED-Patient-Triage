@@ -1,6 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { fetchAllPatientsData } from '../services/patientService';
-import { PatientsData } from '../types/patient';
+/* eslint-disable react-refresh/only-export-components */
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { fetchAllPatientsData } from "../services/patientService";
+import { PatientsData } from "../types/patient";
 
 interface PatientContextType {
   patientsData: PatientsData;
@@ -14,7 +21,7 @@ const PatientContext = createContext<PatientContextType | undefined>(undefined);
 export const usePatientData = () => {
   const context = useContext(PatientContext);
   if (!context) {
-    throw new Error('usePatientData must be used within a PatientProvider');
+    throw new Error("usePatientData must be used within a PatientProvider");
   }
   return context;
 };
@@ -23,13 +30,14 @@ interface PatientProviderProps {
   children: ReactNode;
 }
 
-export const PatientProvider: React.FC<PatientProviderProps> = ({ children }) => {
+export const PatientProvider: React.FC<PatientProviderProps> = ({
+  children,
+}) => {
   const [patientsData, setPatientsData] = useState<PatientsData>({
     red: { waitingQueue: [], treatmentQueue: [], totalBeds: 6 },
     orange: { waitingQueue: [], treatmentQueue: [], totalBeds: 8 },
     yellow: { waitingQueue: [], treatmentQueue: [], totalBeds: 10 },
     green: { waitingQueue: [], treatmentQueue: [], totalBeds: 12 },
-    blue: { waitingQueue: [], treatmentQueue: [], totalBeds: 8 }
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,13 +45,13 @@ export const PatientProvider: React.FC<PatientProviderProps> = ({ children }) =>
   const refreshData = async () => {
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const data = await fetchAllPatientsData();
       setPatientsData(data);
     } catch (err) {
-      setError('Failed to fetch patient data');
-      console.error('Error fetching patient data:', err);
+      setError("Failed to fetch patient data");
+      console.error("Error fetching patient data:", err);
     } finally {
       setIsLoading(false);
     }
@@ -63,12 +71,10 @@ export const PatientProvider: React.FC<PatientProviderProps> = ({ children }) =>
     patientsData,
     isLoading,
     error,
-    refreshData
+    refreshData,
   };
 
   return (
-    <PatientContext.Provider value={value}>
-      {children}
-    </PatientContext.Provider>
+    <PatientContext.Provider value={value}>{children}</PatientContext.Provider>
   );
 };

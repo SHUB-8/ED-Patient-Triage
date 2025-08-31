@@ -1,15 +1,35 @@
-import React from 'react';
-import Dashboard from './components/Dashboard';
-import { PatientProvider } from './context/PatientContext';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Login from "./screens/Login";
+import Register from "./screens/Register";
+import { useAuth } from "./context/AuthContext";
+import Home from "./screens/Home";
 
-function App() {
+const App = () => {
+  const { token } = useAuth();
+
   return (
-    <PatientProvider>
-      <div className="min-h-screen bg-gray-50">
-        <Dashboard />
-      </div>
-    </PatientProvider>
+    <Router>
+      <Routes>
+        <Route
+          path="/"
+          element={token ? <Home></Home> : <Navigate to={"/login"} />}
+        />
+        <Route
+          path="/login"
+          element={token ? <Navigate to="/" /> : <Login />}
+        />
+        <Route
+          path="/register"
+          element={token ? <Navigate to="/" /> : <Register />}
+        />
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;
