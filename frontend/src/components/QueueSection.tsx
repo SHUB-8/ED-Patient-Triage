@@ -1,11 +1,11 @@
 import React from 'react';
 import PatientCard from './PatientCard';
-import { WaitingPatient, TreatmentPatient } from '../types/patient';
+import type { PatientCase } from '../types/priority';
 
 interface QueueSectionProps {
   title: string;
   icon: React.ReactNode;
-  queue: WaitingPatient[] | TreatmentPatient[];
+  queue: PatientCase[];
   queueType: 'waiting' | 'treatment';
   zoneColor: string;
   isLoading: boolean;
@@ -52,7 +52,7 @@ const QueueSection: React.FC<QueueSectionProps> = ({
         ) : (
           queue.map((patient) => (
             <PatientCard
-              key={`${queueType}-${patient.patientId}`}
+              key={`${queueType}-${patient.id}`}
               patient={patient}
               queueType={queueType}
             />

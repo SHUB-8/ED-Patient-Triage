@@ -1,63 +1,124 @@
-import { PatientsData, PatientVitals } from "../types/patient";
+import api from './api';
+import type { Patient } from '../types/patient';
 
-// Mock data generation for demonstration
-const generateMockPatientsData = (): PatientsData => {
-  const zones = ["red", "orange", "yellow", "green"] as const;
-  const data: PatientsData = {
-    red: { waitingQueue: [], treatmentQueue: [], totalBeds: 6 },
-    orange: { waitingQueue: [], treatmentQueue: [], totalBeds: 8 },
-    yellow: { waitingQueue: [], treatmentQueue: [], totalBeds: 10 },
-    green: { waitingQueue: [], treatmentQueue: [], totalBeds: 12 },
-  };
+export interface PatientData {
+  id: string;
+  name: string;
+  age: number;
+  gender: 'MALE' | 'FEMALE' | 'OTHER';
+  phone: string;
+  email: string;
+  medical_history?: any;
+  created_at: string;
+  updated_at: string;
+}
 
-  zones.forEach((zone, zoneIndex) => {
-    // Generate waiting queue patients
-    const waitingCount = Math.floor(Math.random() * 8) + 1;
-    for (let i = 0; i < waitingCount; i++) {
-      data[zone].waitingQueue.push({
-        patientId: `P${String(zoneIndex * 100 + i + 1).padStart(4, "0")}`,
-        priorityScore: Math.floor(Math.random() * 40) + (100 - zoneIndex * 20),
-        arrivalTime: new Date(
-          Date.now() - Math.random() * 120 * 60 * 1000
-        ).toISOString(),
-      });
-    }
+export interface PatientCase {
+  id: string;
+  zone: string;
+  si: number;
+  news2: number;
+  resource_score: number;
+  age_flag: boolean;
+  arrival_time: string;
+  last_eval_time: string;
+  priority: number;
+  patient_id: string;
+  status: 'WAITING' | 'IN_TREATMENT';
+  time_served?: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
-    // Sort waiting queue by priority score (descending - max heap)
-    data[zone].waitingQueue.sort((a, b) => b.priorityScore - a.priorityScore);
-
-    // Generate treatment queue patients
-    const treatmentCount = Math.min(
-      Math.floor(Math.random() * data[zone].totalBeds) + 1,
-      data[zone].totalBeds
-    );
-    for (let i = 0; i < treatmentCount; i++) {
-      data[zone].treatmentQueue.push({
-        patientId: `P${String(zoneIndex * 100 + waitingCount + i + 1).padStart(
-          4,
-          "0"
-        )}`,
-        bedNumber: `${zone.toUpperCase()}-${String(i + 1).padStart(2, "0")}`,
-        remainingTime: Math.floor(Math.random() * 180) + 15,
-      });
-    }
-
-    // Sort treatment queue by remaining time (ascending - min heap)
-    data[zone].treatmentQueue.sort((a, b) => a.remainingTime - b.remainingTime);
-  });
-
-  return data;
+/**
+ * Fetch all patients
+ */
+export const fetchAllPatients = async (): Promise<PatientData[]> => {
+  try {
+    const response = await api.get<{ patients: PatientData[] }>('/patients');
+    return response.data.patients;
+  } catch (error) {
+    console.error('Error fetching patients:', error);
+    throw error;
+  }
 };
 
-export const fetchAllPatientsData = async (): Promise<PatientsData> => {
-  // Simulate API call delay
-  await new Promise((resolve) =>
-    setTimeout(resolve, 500 + Math.random() * 1000)
-  );
-
-  // In a real application, this would make an API call to PostgreSQL
-  return generateMockPatientsData();
+/**
+ * Fetch a patient by ID
+ */
+export const fetchPatientById = async (id: string): Promise<PatientData> => {
+  try {
+    const response = await api.get<{ patient: PatientData }>(`/patients/${id}`);
+    return response.data.patient;
+  } catch (error) {
+    console.error(`Error fetching patient ${id}:`, error);
+    throw error;
+  }
 };
+
+/**
+ * Add a new patient
+ */
+export const addPatient = async (patientData: Omit<Patient, 'id' | 'created_at' | 'updated_at'>): Promise<PatientData> => {
+  try {
+    const response = await api.post<{ patient: PatientData }>('/patients', patientData);
+    return response.data.patient;
+  } catch (error) {
+    console.error('Error adding patient:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update a patient
+ */
+export const updatePatient = async (id: string, patientData: Partial<Patient>): Promise<PatientData> => {
+  try {
+    const response = await api.put<{ patient: PatientData }>(`/patients/${id}`, patientData);
+    return response.data.patient;
+  } catch (error) {
+    console.error(`Error updating patient ${id}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch patient cases
+ */
+export const fetchPatientCases = async (patientId: string): Promise<PatientCase[]> => {
+  try {
+    const response = await api.get<{ cases: PatientCase[] }>(`/patients/${patientId}/cases`);
+    return response.data.cases;
+  } catch (error) {
+    console.error(`Error fetching cases for patient ${patientId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Search patients
+ */
+export const searchPatients = async (query: string, limit: number = 10): Promise<PatientData[]> => {
+  try {
+    const response = await api.get<{ patients: PatientData[] }>(`/patients/search?q=${query}&limit=${limit}`);
+    return response.data.patients;
+  } catch (error) {
+    console.error('Error searching patients:', error);
+    throw error;
+  }
+};
+
+// Keep the mock vitals function for now (could be replaced with real data later)
+export interface PatientVitals {
+  heartRate: number; // bpm
+  systolicBP: number; // mmHg
+  diastolicBP: number; // mmHg
+  temperature: number; // Celsius
+  respiratoryRate: number; // breaths per minute
+  oxygenSaturation: number; // percentage
+  news2Score: number;
+  lastUpdated: string;
+}
 
 export const fetchPatientVitals = async (
   patientId: string

@@ -1,3 +1,27 @@
+export interface Patient {
+  id?: string;
+  name: string;
+  age: number;
+  gender: "MALE" | "FEMALE" | "OTHER";
+  phone: string;
+  email?: string;
+  medical_history?: any;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PatientData {
+  id: string;
+  name: string;
+  age: number;
+  gender: "MALE" | "FEMALE" | "OTHER";
+  phone: string;
+  email?: string;
+  medical_history?: any;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface WaitingPatient {
   patientId: string;
   priorityScore: number;

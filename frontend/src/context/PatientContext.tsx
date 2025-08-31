@@ -6,8 +6,20 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { fetchAllPatientsData } from "../services/patientService";
-import { PatientsData } from "../types/patient";
+import { fetchAllQueues } from "../services/priorityService";
+import type { PatientCase } from "../types/priority";
+
+interface ZoneData {
+  waitingQueue: PatientCase[];
+  treatmentQueue: PatientCase[];
+}
+
+interface PatientsData {
+  red: ZoneData;
+  orange: ZoneData;
+  yellow: ZoneData;
+  green: ZoneData;
+}
 
 interface PatientContextType {
   patientsData: PatientsData;
@@ -34,10 +46,10 @@ export const PatientProvider: React.FC<PatientProviderProps> = ({
   children,
 }) => {
   const [patientsData, setPatientsData] = useState<PatientsData>({
-    red: { waitingQueue: [], treatmentQueue: [], totalBeds: 6 },
-    orange: { waitingQueue: [], treatmentQueue: [], totalBeds: 8 },
-    yellow: { waitingQueue: [], treatmentQueue: [], totalBeds: 10 },
-    green: { waitingQueue: [], treatmentQueue: [], totalBeds: 12 },
+    red: { waitingQueue: [], treatmentQueue: [] },
+    orange: { waitingQueue: [], treatmentQueue: [] },
+    yellow: { waitingQueue: [], treatmentQueue: [] },
+    green: { waitingQueue: [], treatmentQueue: [] },
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +59,19 @@ export const PatientProvider: React.FC<PatientProviderProps> = ({
     setError(null);
 
     try {
-      const data = await fetchAllPatientsData();
-      setPatientsData(data);
+      const queueData = await fetchAllQueues();
+      
+      // Transform the raw API data into the structure needed by the component
+      const transformedData = Object.keys(queueData).reduce((acc, zone) => {
+        const patients = queueData[zone as keyof typeof queueData];
+        acc[zone.toLowerCase() as keyof PatientsData] = {
+          waitingQueue: patients.filter((p) => p.status === "WAITING"),
+          treatmentQueue: patients.filter((p) => p.status === "IN_TREATMENT"),
+        };
+        return acc;
+      }, {} as PatientsData);
+
+      setPatientsData(transformedData);
     } catch (err) {
       setError("Failed to fetch patient data");
       console.error("Error fetching patient data:", err);
@@ -61,8 +84,8 @@ export const PatientProvider: React.FC<PatientProviderProps> = ({
     // Initial data load
     refreshData();
 
-    // Set up auto-refresh every 10 seconds
-    const interval = setInterval(refreshData, 10000);
+    // Set up auto-refresh every 30 seconds
+    const interval = setInterval(refreshData, 30000);
 
     return () => clearInterval(interval);
   }, []);
