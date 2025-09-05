@@ -53,7 +53,7 @@ model PatientCase {
   disease_code String?
   status CaseStatus @default(WAITING)
 
-  staff_id String? @unique
+  staff_id String? 
   staff User? @relation("StaffToPatientCase", fields: [staff_id], references: [id])
 
   

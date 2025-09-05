@@ -201,6 +201,14 @@ export const admitTopPriorityCase = async (req: Request, res: Response) => {
     return res.status(404).json({ error: "No cases in this zone" });
   }
 
+  const availableBed = await prisma.beds.findFirst({
+    where: { zone: zone, case_id: null },
+  });
+
+  if (!availableBed) {
+    return res.status(500).json({ error: "No available beds in this zone" });
+  }
+
   const removedCase: PatientCase | undefined = queues[zone].shift();
 
   if (removedCase) {
@@ -212,8 +220,14 @@ export const admitTopPriorityCase = async (req: Request, res: Response) => {
       },
     });
 
+    await prisma.beds.update({
+      where: { id: availableBed.id },
+      data: { case_id: removedCase.id },
+    });
+
     if (req.io) {
       req.io.emit("queues_updated", queues);
+      req.io.emit("beds_updated", {});
     }
 
     return res.status(200).json({
